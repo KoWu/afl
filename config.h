@@ -139,11 +139,11 @@
 
 /* Maximum size of input file, in bytes (keep under 100MB): */
 
-#define MAX_FILE            (1 * 1024 * 1024)
+#define MAX_FILE            (100 * 1024 * 1024)
 
 /* The same, for the test case minimizer: */
 
-#define TMIN_MAX_FILE       (10 * 1024 * 1024)
+#define TMIN_MAX_FILE       (100 * 1024 * 1024)
 
 /* Block normalization steps for afl-tmin: */
 
@@ -294,7 +294,7 @@
 /* Fork server init timeout multiplier: we'll wait the user-selected
    timeout plus this much for the fork server to spin up. */
 
-#define FORK_WAIT_MULT      10
+#define FORK_WAIT_MULT      1000
 
 /* Calibration timeout adjustments, to be a bit more generous when resuming
    fuzzing sessions or trying to calibrate already-added internal finds.

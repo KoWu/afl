@@ -83,6 +83,7 @@
 EXP_ST u8 *in_dir,                    /* Input directory with test cases  */
           *out_file,                  /* File to fuzz, if any             */
           *out_dir,                   /* Working & output directory       */
+          *cur_input_filename,        /* Filename of the fuzzing input    */
           *sync_dir,                  /* Synchronization directory        */
           *sync_id,                   /* Fuzzer ID                        */
           *use_banner,                /* Display banner                   */
@@ -3821,7 +3822,7 @@ static void maybe_delete_out_dir(void) {
 
   /* And now, for some finishing touches. */
 
-  fn = alloc_printf("%s/.cur_input", out_dir);
+  fn = alloc_printf("%s/%s", out_dir, cur_input_filename);
   if (unlink(fn) && errno != ENOENT) goto dir_cleanup_failed;
   ck_free(fn);
 
@@ -7204,7 +7205,7 @@ EXP_ST void setup_dirs_fds(void) {
 
 EXP_ST void setup_stdio_file(void) {
 
-  u8* fn = alloc_printf("%s/.cur_input", out_dir);
+  u8* fn = alloc_printf("%s/%s", out_dir, cur_input_filename);
 
   unlink(fn); /* Ignore errors */
 
@@ -7526,7 +7527,7 @@ EXP_ST void detect_file_args(char** argv) {
       /* If we don't have a file name chosen yet, use a safe default. */
 
       if (!out_file)
-        out_file = alloc_printf("%s/.cur_input", out_dir);
+        out_file = alloc_printf("%s/%s", out_dir, cur_input_filename);
 
       /* Be sure that we're always using fully-qualified paths. */
 
@@ -7719,7 +7720,7 @@ int main(int argc, char** argv) {
   gettimeofday(&tv, &tz);
   srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-  while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:dnCB:S:M:x:Q")) > 0)
+  while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:I:dnCB:S:M:x:Q")) > 0)
 
     switch (opt) {
 
@@ -7736,6 +7737,12 @@ int main(int argc, char** argv) {
 
         if (out_dir) FATAL("Multiple -o options not supported");
         out_dir = optarg;
+        break;
+
+      case 'I': /* custom input file name */
+        
+        if (cur_input_filename) FATAL("Multiple -I options not supported");
+        cur_input_filename = optarg;
         break;
 
       case 'M': { /* master sync ID */
@@ -7894,6 +7901,8 @@ int main(int argc, char** argv) {
     }
 
   if (optind == argc || !in_dir || !out_dir) usage(argv[0]);
+
+  if (!cur_input_filename) cur_input_filename = ".cur_input";
 
   setup_signal_handlers();
   check_asan_opts();
