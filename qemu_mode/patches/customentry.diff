@@ -1,0 +1,15 @@
+--- qemu-2.10.0/linux-user/elfload.c
++++ qemu-2.10.0/linux-user/elfload.c
+@@ -2085,6 +2085,12 @@ static void load_elf_image(const char *image_name, int image_fd,
+     info->brk = 0;
+     info->elf_flags = ehdr->e_flags;
+ 
++    const char* entry = getenv("AFL_ENTRY_POINT");
++    if (entry) {
++        afl_entry_point = strtol(entry, NULL, 16);
++    }
++    if (!afl_entry_point) afl_entry_point = info->entry;
++
+     for (i = 0; i < ehdr->e_phnum; i++) {
+         struct elf_phdr *eppnt = phdr + i;
+         if (eppnt->p_type == PT_LOAD) {

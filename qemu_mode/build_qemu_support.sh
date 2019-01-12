@@ -120,7 +120,6 @@ echo "[+] Unpacking successful."
 echo "[*] Configuring QEMU for $CPU_TARGET..."
 
 ORIG_CPU_TARGET="$CPU_TARGET"
-
 test "$CPU_TARGET" = "" && CPU_TARGET="`uname -m`"
 test "$CPU_TARGET" = "i686" && CPU_TARGET="i386"
 
@@ -134,13 +133,14 @@ patch -p1 <../patches/syscall.diff || exit 1
 patch -p1 <../patches/configure.diff || exit 1
 patch -p1 <../patches/memfd.diff || exit 1
 patch -p1 <../patches/translate-all.diff || exit 1
+patch -p1 <../patches/customentry.diff || exit 1
 
 echo "[+] Patching done."
 
 # --enable-pie seems to give a couple of exec's a second performance
 # improvement, much to my surprise. Not sure how universal this is..
 
-CFLAGS="-O3 -ggdb" ./configure --disable-system \
+CFLAGS="-O3 -ggdb" ./configure --disable-system --python=python2 \
   --enable-linux-user --disable-gtk --disable-sdl --disable-vnc \
   --target-list="${CPU_TARGET}-linux-user" --enable-pie --enable-kvm || exit 1
 
@@ -148,7 +148,7 @@ echo "[+] Configuration complete."
 
 echo "[*] Attempting to build QEMU (fingers crossed!)..."
 
-make || exit 1
+make -j`nproc` || exit 1
 
 echo "[+] Build process successful!"
 
@@ -167,7 +167,7 @@ if [ "$ORIG_CPU_TARGET" = "" ]; then
 
   cd ..
 
-  make >/dev/null || exit 1
+  make -j`nproc` >/dev/null || exit 1
 
   gcc test-instr.c -o test-instr || exit 1
 
